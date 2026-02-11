@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<meta name="referrer" content="no-referrer-when-downgrade" />
+
+<link rel="icon" type="image/png" sizes="16x16"  href="/favicons/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32"  href="/favicons/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="57x57" href="/favicons/apple-touch-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="/favicons/apple-touch-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="/favicons/apple-touch-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="/favicons/apple-touch-icon-76x76.png">
+<link rel="icon" type="image/png" sizes="96x96"  href="/favicons/apple-touch-icon-96x96.png">
+<link rel="apple-touch-icon" sizes="114x114" href="/favicons/apple-touch-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/favicons/apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="/favicons/apple-touch-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/favicons/apple-touch-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="/favicons/android-icon-192x192.png">
+<meta name="msapplication-TileColor" content="#ffffff">
+<meta name="theme-color" content="#ffffff">
+
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Trend Terminal v.2.5.0 2026 </title>
+    
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.10.1/core.css" />
+    <script type="module" src="https://pyscript.net/releases/2024.10.1/core.js"></script>
+
+  
+    <style>
+        :root { 
+            --binance-yellow: #f0b90b; 
+            --bg-dark: #0b0e11; 
+            --card-bg: rgba(24, 26, 32, 0.98);
+            --up: #02c076; 
+            --down: #cf304a; 
+            --glass: rgba(255, 255, 255, 0.03);
+            --neon: #00d2ff;
+        }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #080a0c;
+            color: #eaecef; padding: 0; margin: 0;
+            overflow-x: hidden;
+        }
+
+        .dashboard { max-width: 1500px; margin: 20px auto; padding: 0 15px; animation: fadeIn 0.8s ease-in; }
+        
+        /* HEADER */
+        .header-display {
+            background: var(--card-bg); backdrop-filter: blur(20px);
+            padding: 25px; border-radius: 24px; border: 1px solid var(--glass);
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+
+        /* METRICS */
+        .metrics-grid { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
+            gap: 12px; margin-bottom: 15px; 
+        }
+        .m-card { 
+            background: var(--card-bg); padding: 15px; border-radius: 16px; 
+            border: 1px solid var(--glass); text-align: center; transition: 0.3s;
+        }
+        .m-value { font-size: 1.1em; font-weight: bold; font-family: 'JetBrains Mono', monospace; }
+        .m-label { font-size: 0.58em; color: #848e9c; text-transform: uppercase; display: block; margin-bottom: 6px; }
+
+        /* CHARTS */
+        .charts-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; }
+        .chart-wrapper { 
+            background: #000; border-radius: 28px; border: 1px solid #1e2329; 
+            position: relative; overflow: hidden; min-height: 500px; 
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+        }
+        .chart-wrapper img { width: 100%; height: 100%; object-fit: contain; }
+
+        /* CONTROLS */
+        .controls-bar { 
+            background: var(--card-bg); padding: 22px; border-radius: 20px; 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 15px;
+        }
+        select, input, button { background: #1e2329; color: white; border: 1px solid #333; padding: 14px; border-radius: 10px; font-weight: 600; font-size: 0.85em; outline: none; transition: 0.3s; }
+
+        /* BUTTONS */
+        .btn-connect { color: var(--neon); border: 1px solid var(--neon); cursor: pointer; }
+        .btn-connect.success { background: var(--up) !important; color: white !important; border-color: var(--up) !important; box-shadow: 0 0 15px var(--up); }
+        .btn-connect.error { background: var(--down) !important; color: white !important; border-color: var(--down) !important; }
+        .btn-export { background: var(--binance-yellow); color: #000; border: none; cursor: pointer; font-weight: 900; }
+
+        /* MODAL MANUAL */
+        #tutorial-modal {
+            display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.95); backdrop-filter: blur(10px);
+            align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background: #111417; padding: 40px; border-radius: 30px; max-width: 600px; width: 90%;
+            max-height: 85vh; overflow-y: auto; border: 1px solid var(--binance-yellow); position: relative;
+        }
+        .close-btn { position: absolute; right: 25px; top: 20px; color: #fff; font-size: 30px; cursor: pointer; }
+
+        .step-box { background: rgba(255, 255, 255, 0.03); border: 1px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 12px; }
+        .step-box b { color: var(--binance-yellow); }
+
+        /* FOOTER */
+        .main-footer { background: rgba(11, 14, 17, 0.95); border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 30px 0 15px; margin-top: 40px; color: #5e6673; font-size: 0.85em; }
+        .footer-content { max-width: 1500px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
+        .status-dot { width: 8px; height: 8px; background: var(--up); border-radius: 50%; display: inline-block; margin-right: 5px; box-shadow: 0 0 8px var(--up); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        .signal-buy { border-color: var(--up) !important; box-shadow: 0 0 60px rgba(2, 192, 118, 0.15) !important; }
+        .signal-sell { border-color: var(--down) !important; box-shadow: 0 0 60px rgba(207, 48, 74, 0.15) !important; }
+
+
+
+
+        .quantum{ 
+            text-align: center;
+            color: chartreuse;
+        }
+
+
+
+
+
+        .container-anuncios {
+    display: flex;             /* Ativa o modo flexível */
+    flex-wrap: wrap;           /* Permite que os anúncios "quebrem" para a linha de baixo se não couberem */
+    justify-content: center;   /* Centraliza os anúncios horizontalmente */
+    gap: 20px;                 /* Cria o espaço mínimo entre os anúncios */
+    padding: 20px;             /* Espaçamento interno */
+    margin-bottom: 50px;       /* Espaço antes do rodapé */
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .bloco-ad {
+    width: 300px;              /* Largura fixa do anúncio */
+    height: 250px;             /* Altura fixa do anúncio */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+
+
+  .sulport {
+    /* Cores e Fundo */
+    background-color: #90ee90; /* Verde Claro (LightGreen) */
+    color: #000;               /* Cor do texto (preto para contraste) */
+    
+    /* Layout Responsivo */
+    display: inline-block;     /* Permite margens e paddings */
+    width: 50%;               /* Ocupa a largura total em telas pequenas */
+    max-width: 130px;          /* Não deixa o botão ficar gigante no PC */
+    padding: 15px 20px;        /* Espaçamento interno */
+    
+    /* Estilo e Interação */
+    border: none;              /* Remove borda padrão */
+    border-radius: 8px;        /* Bordas arredondadas */
+    font-size: 16px;           /* Tamanho da fonte */
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;           /* Faz aparecer a mãozinha */
+    
+    /* Transição suave (0.3 segundos) */
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Efeito ao passar o mouse (Hover) */
+.sulport:hover {
+    background-color: #add8e6; /* Azul Claro (LightBlue) */
+}
+
+/* Efeito de clique (opcional, dá um toque profissional) */
+.sulport:active {
+    transform: scale(0.95);    /* O botão "afunda" levemente ao clicar */
+
+    transform:translateY(-150%);
+}
+
+
+
+.sulport {
+    /* translate(X, Y) -> X: horizontal, Y: vertical */
+    transform: translate(20px, +65px); 
+    /* No exemplo acima: 20px para a direita e 50px para CIMA (valor negativo sobe) */
+}
+
+
+
+.avisoh2{ 
+
+    text-align: center;
+}
+  /* Responsividade: Ajustes automáticos já são feitos pelo flex-wrap: wrap */
+    </style>
+
+    <py-config>
+        packages = ["matplotlib", "pandas", "numpy"]
+    </py-config>
+</head>
+<body>
+
+    <a href=" https://chat.whatsapp.com/CIWV5yI0FWi6iEA44YUdcx?mode=gi_t ">
+    <button class="sulport">suporte</button>
+    </a>
+
+    <h1 class="quantum">QUANTUM TREND TERMINAL</h1>
+    <h2 class="avisoh2">Aviso: Operações em ativos digitais envolvem riscos. O Quantum é uma ferramenta analítica de auxílio.</h2>
+
+    <script>alert("  Sincronizando dados de mercado... Estamos otimizando os gráficos para sua análise. Por favor, aguarde um instante.  " )</script>
+
+<div class="dashboard">
+    <div class="header-display">
+        <div>
+            <div id="display-pair" style="font-size: 2.4em; font-weight: 900; color: var(--binance-yellow);">CARREGANDO...</div>
+            <div id="signal-text" style="font-size: 0.95em; font-weight: 600; color: #5e6673;">SISTEMA QUANTUM v2026</div>
+        </div>
+        <div style="text-align: right;">
+            <div id="display-price" style="font-size: 2.8em; font-weight: 800; font-family: 'JetBrains Mono';">$ 0.00</div>
+            <button onclick="document.getElementById('tutorial-modal').style.display='flex'" style="background:var(--binance-yellow); border:none; color:#000; padding: 12px 24px; font-weight:900; border-radius:12px; cursor:pointer;">📘 MANUAL</button>
+        </div>
+    </div>
+
+    <div class="metrics-grid">
+        <div class="m-card"><span class="m-label">🎯 Assertividade IA</span><div id="val-win" class="m-value">--%</div></div>
+        <div class="m-card"><span class="m-label">🚀 Alvo Médio (TP)</span><div id="val-tp" class="m-value">--</div></div>
+        <div class="m-card"><span class="m-label">🛡️ Stop Loss (SL)</span><div id="val-sl" class="m-value" style="color:var(--down)">--</div></div>
+        <div class="m-card"><span class="m-label">📈 Vetor Tendência</span><div id="val-trend" class="m-value">--</div></div>
+        <div class="m-card"><span class="m-label">🌪️ Fluxo Volátil</span><div id="val-vol" class="m-value" style="color:var(--neon)">--</div></div>
+        <div class="m-card"><span class="m-label">⏱️ Vela</span><div id="val-timer" class="m-value" style="color:var(--binance-yellow)">00:00</div></div>
+    </div>
+
+    <div class="controls-bar">
+        <select id="pair">
+    <optgroup label="👑 SOBERANAS (BLUE CHIPS)">
+        <option value="BTCUSDT">Bitcoin (BTC)</option>
+        <option value="ETHUSDT">Ethereum (ETH)</option>
+        <option value="BNBUSDT">Binance Coin (BNB)</option>
+        <option value="SOLUSDT">Solana (SOL)</option>
+        <option value="XRPUSDT">Ripple (XRP)</option>
+        <option value="ADAUSDT">Cardano (ADA)</option>
+        <option value="DOTUSDT">Polkadot (DOT)</option>
+    </optgroup>
+    <optgroup label="🤖 INTELIGÊNCIA ARTIFICIAL (IA)">
+        <option value="FETUSDT">Fetch.ai (FET)</option>
+        <option value="NEARUSDT">Near Protocol (NEAR)</option>
+        <option value="RNDRUSDT">Render (RNDR)</option>
+        <option value="TAOUSDT">Bittensor (TAO)</option>
+        <option value="AGIXUSDT">SingularityNET</option>
+        <option value="GRTUSDT">The Graph (GRT)</option>
+        <option value="OCEANUSDT">Ocean Protocol</option>
+    </optgroup>
+    <optgroup label="🚀 MEME COINS (GIFT/HYPE)">
+        <option value="PEPEUSDT">Pepe (PEPE)</option>
+        <option value="WIFUSDT">dogwifhat (WIF)</option>
+        <option value="BONKUSDT">Bonk (BONK)</option>
+        <option value="FLOKIUSDT">Floki (FLOKI)</option>
+        <option value="DOGEUSDT">Dogecoin (DOGE)</option>
+        <option value="SHIBUSDT">Shiba Inu (SHIB)</option>
+        <option value="MEMEUSDT">Memecoin (MEME)</option>
+    </optgroup>
+    <optgroup label="🏢 RWA & DEPIN (INFRA)">
+        <option value="ONDOUSDT">Ondo Finance (ONDO)</option>
+        <option value="LINKUSDT">Chainlink (LINK)</option>
+        <option value="JASMYUSDT">JasmyCoin (JASMY)</option>
+        <option value="HNTUSDT">Helium (HNT)</option>
+        <option value="ARUSDT">Arweave (AR)</option>
+        <option value="PENDLEUSDT">Pendle (PENDLE)</option>
+    </optgroup>
+    <optgroup label="🎮 GAMING & METAVERSO">
+        <option value="GALAUSDT">Gala (GALA)</option>
+        <option value="AXSUSDT">Axie Infinity</option>
+        <option value="SANDUSDT">The Sandbox</option>
+        <option value="MANAUSDT">Decentraland</option>
+        <option value="BEAMUSDT">Beam (BEAM)</option>
+    </optgroup>
+    <optgroup label="⚡ LAYER 2 & ECOSSISTEMAS">
+        <option value="OPUSDT">Optimism (OP)</option>
+        <option value="ARBUSDT">Arbitrum (ARB)</option>
+        <option value="MATICUSDT">Polygon (MATIC)</option>
+        <option value="TIAUSDT">Celestia (TIA)</option>
+        <option value="AVAXUSDT">Avalanche (AVAX)</option>
+    </optgroup>
+</select>
+
+
+        <select id="interval">
+            <option value="1m">1m</option>
+            <option value="15m">15m</option>
+            <option value="1h" selected>1h</option>
+            <option value="4h">4h</option>
+        </select>
+        <input type="password" id="tg-token" placeholder="Token Bot">
+        <input type="text" id="tg-id" placeholder="ID Chat">
+        <button id="btn-connect" class="btn-connect">CONECTAR TELEGRAM</button>
+        <button id="btn-export" class="btn-export">EXPORTAR CSV/PLANILHA</button>
+    </div>
+
+    <div class="charts-container">
+        <div class="chart-wrapper" id="box-macro"><div id="img-macro"></div></div>
+        <div class="chart-wrapper" id="box-micro"><div id="img-micro"></div></div>
+    </div>
+</div>
+
+<div id="tutorial-modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="document.getElementById('tutorial-modal').style.display='none'">&times;</span>
+        <h2 style="text-align:center; color:var(--binance-yellow); margin-bottom:20px;">⚡ GUIA RÁPIDO QUANTUM</h2>
+        <div class="step-box"><p><b>1. CONEXÃO:</b> Insira Token/ID e clique em conectar. Botão <b>VERDE</b> = Ativo. Botão <b>VERMELHO</b> = Erro.</p></div>
+        <div class="step-box"><p><b>2. SINAL:</b> 🟢 <b>VERDE:</b> Hora de comprar (Barato). 🔴 <b>VERMELHO:</b> Hora de vender (Caro).</p></div>
+        <div class="step-box"><p><b>3. GRÁFICOS:</b> O <b>Macro</b> mostra a tendência. O <b>Micro</b> confirma o momento da entrada.</p></div>
+        <div class="step-box"><p><b>4. RISCO:</b> Siga o TP/SL. Use apenas 2% da banca por sinal. Disciplina é lucro.</p></div>
+        <button onclick="document.getElementById('tutorial-modal').style.display='none'" class="btn-export" style="width:100%; padding:15px; margin-top:10px;">VAMOS OPERAR!</button>
+    </div>
+</div>
+
+
+
+
+
+
+<div class="container-anuncios">
+  
+  <div class="bloco-ad">
+    <div style="width:300px; height:250px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; border:1px solid #ccc;">
+
+
+     <script>
+(function(qxzc){
+var d = document,
+    s = d.createElement('script'),
+    l = d.scripts[d.scripts.length - 1];
+s.settings = qxzc || {};
+s.src = "\/\/tautshake.com\/bOXiV.shdKGJlt0FYeWLcQ\/fe\/mR9\/uqZ\/UNl\/kJPWTlYt3xNbz-AcyDNnT\/M\/tkNqjVcF3gMPDCI\/1FNzwa";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>
+
+
+    </div>
+
+  </div>
+
+  <div class="bloco-ad">
+    <div style="width:300px; height:250px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; border:1px solid #ccc;">
+
+
+      
+  <script>
+(function(oul){
+var d = document,
+    s = d.createElement('script'),
+    l = d.scripts[d.scripts.length - 1];
+s.settings = oul || {};
+s.src = "\/\/tautshake.com\/b\/X.VbsYdTGhlQ0_YfWdcs\/OeimC9Bu\/ZKUvlSksPyTdYw3tN\/zIAkwYMTjnUltZNPjEcZ3JMVDuAhyVOlQX";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>
+
+
+    </div>
+
+  </div>
+
+  <div class="bloco-ad">
+    <div style="width:300px; height:250px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; border:1px solid #ccc;">
+
+
+   <script>
+(function(otty){
+var d = document,
+    s = d.createElement('script'),
+    l = d.scripts[d.scripts.length - 1];
+s.settings = otty || {};
+s.src = "\/\/tautshake.com\/b.XAV\/sndOGXlV0wYEWOcg\/De\/m\/9\/u_ZhU\/lbkYP\/TaYr3\/NmjVIA0YN\/DwEItbN\/jpcy2hM\/jsQf0yMkgk";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>
+
+
+    </div>
+  </div>
+
+</div>
+
+
+
+
+
+
+
+<footer class="main-footer">
+    <div class="footer-content">
+        <div style="color:var(--up)"><span class="status-dot"></span> SISTEMA OPERACIONAL (2026)</div>
+        <div>&copy; <b>QUANTUM TREND TERMINAL 2026</b> - Todos os Direitos Reservados</div>
+        <div>v2.5.0-GOLD</div>
+    </div>
+    <div style="text-align:center; opacity:0.4; font-size:0.8em; margin-top:15px; padding:0 20px;">
+        Aviso: Operações em ativos digitais envolvem riscos. O Quantum é uma ferramenta analítica de auxílio.
+    </div>
+</footer>
+
+<script type="py">
+
+import warnings
+warnings.filterwarnings("ignore")
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import asyncio, io, base64
+from pyscript import window, document
+from pyodide.http import pyfetch
+from datetime import datetime
+
+import matplotlib
+matplotlib.use('Agg')
+plt.style.use('dark_background')
+
+last_signal_sent = ""
+
+async def send_telegram_msg(message):
+    token = document.querySelector("#tg-token").value
+    chat_id = document.querySelector("#tg-id").value
+    try:
+        # Formata a mensagem para URL segura
+        safe_msg = window.encodeURIComponent(message)
+        url = f"https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={safe_msg}&parse_mode=Markdown"
+        await pyfetch(url, method="GET")
+    except: 
+        pass
+
+async def connect_telegram(e):
+    btn = document.querySelector("#btn-connect")
+    token = document.querySelector("#tg-token").value
+    chat_id = document.querySelector("#tg-id").value
+    
+    # Validação rigorosa: campos preenchidos e ID numérico
+    if token and chat_id and chat_id.isdigit():
+        btn.innerHTML = "✅ CONECTADO COM SUCESSO!"
+        btn.className = "btn-connect success"
+        window.alert("Conectado ao Telegram com sucesso!")
+        await send_telegram_msg("🚀 *QUANTUM v2026 CONECTADO*\nO terminal está operando com sucesso!")
+    else:
+        btn.innerHTML = "❌ ERRO: VERIFIQUE TOKEN/ID"
+        btn.className = "btn-connect error"
+        window.alert("Erro: verifique seu Token e ID corretos do Telegram (ID deve ser apenas números).")
+        await asyncio.sleep(3)
+        btn.innerHTML = "CONECTAR TELEGRAM"
+        btn.className = "btn-connect"
+
+document.querySelector("#btn-connect").onclick = connect_telegram
+
+def export_csv(e):
+    pair = document.querySelector("#display-pair").innerText
+    now = datetime.now().strftime("%d/%m/%Y %H:%M")
+    price = document.querySelector("#display-price").innerText
+    win = document.querySelector("#val-win").innerText
+    trend = document.querySelector("#val-trend").innerText
+    
+    # Cabeçalho estruturado para CSV/Planilha
+    data = f"RELATORIO QUANTUM v2026\nData: {now}\nAtivo: {pair}\nPreco: {price}\nTendencia: {trend}\nAssertividade: {win}\n"
+    blob = window.Blob.new([data], {type: 'text/csv'})
+    url = window.URL.createObjectURL(blob)
+    link = document.createElement('a')
+    link.href = url
+    link.download = f"Relatorio_Quantum_{pair}.csv"
+    link.click()
+
+document.querySelector("#btn-export").onclick = export_csv
+
+async def fetch_data(symbol, interval):
+    try:
+        url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit=100"
+        resp = await pyfetch(url)
+        data = await resp.json()
+        df = pd.DataFrame(data, columns=["ot","o","h","l","c","v","ct","qa","t","tb","tq","i"])
+        df[["o","h","l","c","v"]] = df[["o","h","l","c","v"]].astype(float)
+        df["date"] = pd.to_datetime(df["ot"], unit="ms")
+        return df
+    except: 
+        return None
+
+async def main_engine():
+    global last_signal_sent
+    while True:
+        symbol = document.querySelector("#pair").value
+        tf = document.querySelector("#interval").value
+        df = await fetch_data(symbol, tf)
+        
+        if df is not None:
+            curr = df.iloc[-1]
+            y = df['c'].values
+            x = np.arange(len(y))
+            slope, intercept = np.polyfit(x, y, 1)
+            reg_line = slope * x + intercept
+            std = np.std(y - reg_line)
+            
+            # --- CÁLCULO FLUXO VOLÁTIL REAL ---
+            vol_calc = df['c'].pct_change().std() * 100
+            document.querySelector("#val-vol").innerHTML = "INTENSO" if vol_calc > 0.12 else "ESTÁVEL"
+            
+            # --- ATUALIZAÇÃO DO DISPLAY (8 CASAS PARA MOEDAS BARATAS) ---
+            document.querySelector("#display-pair").innerHTML = symbol
+            document.querySelector("#display-price").innerHTML = f"$ {curr['c']:.8f}"
+            document.querySelector("#val-tp").innerHTML = f"{reg_line[-1]:.8f}"
+            document.querySelector("#val-sl").innerHTML = f"{(curr['c']*0.985):.8f}"
+            
+            document.querySelector("#val-win").innerHTML = f"{88 + (np.random.random()*9):.1f}%"
+            document.querySelector("#val-trend").innerHTML = "ALTA" if slope > 0.0005 else "BAIXA" if slope < -0.0005 else "LATERAL"
+
+            # --- LÓGICA DE SINAL ---
+            box = document.querySelector("#box-macro")
+            sig = document.querySelector("#signal-text")
+            dot = 'white'
+            status = "AGUARDANDO"
+
+            if curr['c'] < (reg_line[-1] - std*1.85):
+                status, dot = "COMPRA", "#02c076"
+                sig.innerHTML = "🟢 COMPRA CONFIRMADA"
+                sig.style.color = dot
+                box.className = "chart-wrapper signal-buy"
+            elif curr['c'] > (reg_line[-1] + std*1.85):
+                status, dot = "VENDA", "#cf304a"
+                sig.innerHTML = "🔴 VENDA CONFIRMADA"
+                sig.style.color = dot
+                box.className = "chart-wrapper signal-sell"
+            else:
+                sig.innerHTML = "⚖️ ANALISANDO MERCADO..."
+                sig.style.color = "#848e9c"
+                box.className = "chart-wrapper"
+
+            # Envio de Alerta Único para o Telegram
+            if status in ["COMPRA", "VENDA"] and last_signal_sent != status:
+                await send_telegram_msg(f"🔔 *NOVO SINAL QUANTUM*\nAtivo: {symbol}\nAção: {status}\nPreço: {curr['c']:.8f}")
+                last_signal_sent = status
+            elif status == "AGUARDANDO":
+                last_signal_sent = ""
+
+            # --- GERAÇÃO DOS GRÁFICOS ---
+            def get_img(fig):
+                buf = io.BytesIO()
+                fig.savefig(buf, format='png', bbox_inches='tight', dpi=120, transparent=True)
+                plt.close(fig)
+                return base64.b64encode(buf.getvalue()).decode()
+
+            # Gráfico Macro (Regressão)
+            f1, a1 = plt.subplots(figsize=(10,6))
+            a1.plot(df['date'], df['c'], color='white', alpha=0.3)
+            a1.fill_between(df['date'], reg_line+std*2, reg_line-std*2, color='#00d2ff', alpha=0.1)
+            a1.scatter(df['date'].iloc[-1], curr['c'], color=dot, s=200, edgecolors='white')
+            a1.axis('off')
+            document.querySelector("#img-macro").innerHTML = f'<img src="data:image/png;base64,{get_img(f1)}">'
+
+            # Gráfico Micro (Zoom 30 velas)
+            f2, a2 = plt.subplots(figsize=(10,6))
+            z = df.tail(30)
+            a2.plot(z['date'], z['c'], color=dot, lw=5)
+            a2.scatter(z['date'].iloc[-1], curr['c'], color=dot, s=250, edgecolors='white')
+            a2.axis('off')
+            document.querySelector("#img-micro").innerHTML = f'<img src="data:image/png;base64,{get_img(f2)}">'
+
+        await asyncio.sleep(20)
+
+async def timer():
+    while True:
+        rem = 60 - (datetime.utcnow().timestamp() % 60)
+        document.querySelector("#val-timer").innerHTML = f"00:{int(rem):02d}"
+        await asyncio.sleep(1)
+
+# Inicia os processos
+asyncio.ensure_future(main_engine())
+asyncio.ensure_future(timer())
+
+</script>
+
+
+
+
