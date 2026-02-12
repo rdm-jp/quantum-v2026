@@ -19,7 +19,7 @@ app.use(express.static("public"));        // Pasta "public" com login.html, prin
 
 // Rota raiz: serve a página de login automaticamente
 app.get("/", (req, res) => {
-  res.sendFile("public/login.html", { root: "." }); // Ajuste se o HTML estiver em outra pasta
+  res.sendFile("public/index.html", { root: "." }); // Ajuste se o HTML estiver em outra pasta
 });
 
 // Rota de login (atualizada e mais segura)

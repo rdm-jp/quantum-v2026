@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,96 +9,21 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #141e30, #243b55);
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    header {
-      text-align: center;
-      padding: 20px;
-    }
-
-    header h1 {
-      font-size: 28px;
-      color: #00e6e6;
-      margin: 0;
-    }
-
-    .login-container {
-      background: rgba(255, 255, 255, 0.08);
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-      margin: 20px auto;
-    }
-
-    .login-container form {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    .login-container input {
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      outline: none;
-      font-size: 16px;
-    }
-
-    .login-container button {
-      padding: 12px;
-      background: #00e6e6;
-      border: none;
-      border-radius: 8px;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .login-container button:hover {
-      background: #00b3b3;
-    }
-
-    .mensagem {
-      margin-top: 10px;
-      font-size: 14px;
-      font-weight: bold;
-    }
-
-    .graficos {
-      width: 90%;
-      max-width: 800px;
-      margin: 30px auto;
-      background: rgba(255,255,255,0.05);
-      padding: 20px;
-      border-radius: 12px;
-    }
-
-    canvas {
-      margin: 20px 0;
-    }
-
-    @media (max-width: 480px) {
-      header h1 { font-size: 22px; }
-      .login-container { padding: 20px; }
-    }
-
-    .atencao { 
-      color: red;
-      font-weight: bold;
-    }
+    /* Seu estilo atual continua igual */
+    body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #141e30, #243b55); color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    header { text-align: center; padding: 20px; }
+    header h1 { font-size: 28px; color: #00e6e6; margin: 0; }
+    .login-container { background: rgba(255, 255, 255, 0.08); padding: 30px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); width: 100%; max-width: 400px; text-align: center; margin: 20px auto; }
+    .login-container form { display: flex; flex-direction: column; gap: 15px; }
+    .login-container input { padding: 12px; border: none; border-radius: 8px; outline: none; font-size: 16px; }
+    .login-container button { padding: 12px; background: #00e6e6; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+    .login-container button:hover { background: #00b3b3; }
+    .mensagem { margin-top: 10px; font-size: 14px; font-weight: bold; }
+    .graficos { width: 90%; max-width: 800px; margin: 30px auto; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; }
+    canvas { margin: 20px 0; }
+    @media (max-width: 480px) { header h1 { font-size: 22px; } .login-container { padding: 20px; } }
+    .atencao { color: red; font-weight: bold; }
+    #loading { display: none; color: #00e6e6; font-weight: bold; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -112,6 +39,7 @@
       <input type="email" id="email" placeholder="Digite seu email" required>
       <button type="submit">Entrar</button>
     </form>
+    <div id="loading">Conectando ao servidor...</div>
     <div class="mensagem" id="mensagem"></div>
   </div>
 
@@ -122,13 +50,24 @@
   </div>
 
   <script>
+
     const form = document.getElementById("loginForm");
     const mensagem = document.getElementById("mensagem");
+    const loading = document.getElementById("loading");
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const usuario = document.getElementById("usuario").value;
-      const email = document.getElementById("email").value;
+      const usuario = document.getElementById("usuario").value.trim();
+      const email = document.getElementById("email").value.trim();
+
+      if (!usuario || !email) {
+        mensagem.style.color = "red";
+        mensagem.textContent = "Preencha todos os campos!";
+        return;
+      }
+
+      loading.style.display = "block";
+      mensagem.textContent = "";
 
       try {
         const response = await fetch("/login", {
@@ -136,24 +75,32 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ usuario, email })
         });
+
+        if (!response.ok) {
+          throw new Error(`Erro do servidor: ${response.status} - ${response.statusText}`);
+        }
+
         const data = await response.json();
 
         mensagem.style.color = data.success ? "lightgreen" : "red";
-        mensagem.textContent = data.message;
+        mensagem.textContent = data.message || "Resposta recebida!";
 
         if (data.success) {
-          setTimeout(() => { window.location.href = "Quantumv2026.html"; }, 1500);
+          setTimeout(() => {
+            window.location.href = "Quantumv2026.html";  // ou o nome exato da página principal
+          }, 1500);
         }
-      } catch {
+      } catch (error) {
+        console.error("Erro completo:", error);
         mensagem.style.color = "red";
-        mensagem.textContent = "Erro na conexão com servidor.";
+        mensagem.textContent = "Erro na conexão com o servidor. Verifique sua internet ou tente novamente.";
+      } finally {
+        loading.style.display = "none";
       }
     });
 
-    // Gráficos fictícios BTC/USD e ETH/USD
+    // Seus gráficos Chart.js continuam iguais
     const btcCtx = document.getElementById('btcChart').getContext('2d');
-    const ethCtx = document.getElementById('ethChart').getContext('2d');
-
     new Chart(btcCtx, {
       type: 'line',
       data: {
@@ -168,6 +115,7 @@
       }
     });
 
+    const ethCtx = document.getElementById('ethChart').getContext('2d');
     new Chart(ethCtx, {
       type: 'line',
       data: {
@@ -184,5 +132,3 @@
   </script>
 </body>
 </html>
-
-
