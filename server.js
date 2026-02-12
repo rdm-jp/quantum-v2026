@@ -1,9 +1,10 @@
 // server.js
 import express from "express";
-import fetch from "node-fetch";
+import cors from "cors";  // Adicionado para evitar problemas de CORS no front (mesmo sendo full-stack)
 import dotenv from "dotenv";
-import cors from "cors"; // Adicionado para evitar problemas de CORS no front (mesmo sendo full-stack)
+import fetch from "node-fetch";
 
+ 
 dotenv.config();
 
 const app = express();
