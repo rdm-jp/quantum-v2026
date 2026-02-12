@@ -1,22 +1,2 @@
-# Segurança e Variáveis de Ambiente
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Dependências (Nunca suba essa pasta!)
 node_modules/
-jspm_packages/
-
-# Logs e Debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-logs
-*.log
-
-# Build e Pastas de Saída
-dist/
-build/
-.next/
