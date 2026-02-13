@@ -2,24 +2,21 @@
   "version": 2,
   "builds": [
     {
-      "src": "index.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
+      "src": "api/index.js",
+      "use": "@vercel/node"  
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/index.js"
+      "source": "/(.*)",
+      "destination": "/api/index.js"  
     }
   ],
   "functions": {
-    "index.js": {
-      "memory": 1024,
-      "maxDuration": 60
+    "api/index.js": {
+      "memory": 1024,       
+      "maxDuration": 10     
     }
-  }
+  },
+  "fluid": true           
 }

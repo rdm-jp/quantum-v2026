@@ -1,38 +1,54 @@
-// server.js
 import express from "express";
-import cors from "cors";  // Adicionado para evitar problemas de CORS no front (mesmo sendo full-stack)
-import dotenv from "dotenv";
+import cors from "cors";
 import fetch from "node-fetch";
+import path from "path";
+import { fileURLToPath } from "url";
 
- 
-dotenv.config();
+// Carregue dotenv apenas em dev local (não em produção/Vercel)
+if (process.env.NODE_ENV !== 'production') {
+  const dotenv = await import('dotenv');  // Dynamic import para ESM
+  dotenv.config();
+}
+
+// Compatibilidade com ESM para __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Middlewares essenciais
-app.use(express.json());                  // Parseia body JSON
-app.use(express.urlencoded({ extended: true })); // Para forms se precisar
-app.use(cors({ origin: "*" }));           // Permite qualquer origem (teste). Depois mude para URL específica se separar front
+// Middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors({ origin: "*" }));  // Em produção, mude para origens específicas
 
-// Sirva os arquivos estáticos do front-end (HTML, CSS, JS)
-app.use(express.static("public"));        // Pasta "public" com login.html, principal.html, css, js, etc.
+// Servir arquivos estáticos
+app.use(express.static(path.join(__dirname, "..", "public")));
 
-// Rota raiz: serve a página de login automaticamente
+// Rota raiz
 app.get("/", (req, res) => {
-  res.sendFile("public/index.html", { root: "." }); // Ajuste se o HTML estiver em outra pasta
+  res.sendFile(path.join(__dirname, "..", "public", "index.html"));
 });
 
-// Rota de login (atualizada e mais segura)
+// Rota de login
 app.post("/login", async (req, res) => {
   const { usuario, email } = req.body;
+
   if (!usuario || !email) {
-    return res.status(400).json({ success: false, message: "Usuário e email são obrigatórios" });
+    return res.status(400).json({
+      success: false,
+      message: "Usuário e email são obrigatórios",
+    });
   }
 
   const agora = new Date().toISOString();
 
   try {
-    // Verifica se o usuário já existe no Airtable
+    // Log para debug: Veja se env vars estão corretas
+    console.log("BASE_ID:", process.env.BASE_ID);
+    console.log("TABLE_NAME:", process.env.TABLE_NAME);
+    console.log("AIRTABLE_TOKEN presente:", !!process.env.AIRTABLE_TOKEN);
+
+    // Verifica se o usuário já existe
     const checkResponse = await fetch(
       `https://api.airtable.com/v0/${process.env.BASE_ID}/${process.env.TABLE_NAME}?filterByFormula={Email}='${encodeURIComponent(email)}'`,
       {
@@ -44,14 +60,15 @@ app.post("/login", async (req, res) => {
     );
 
     if (!checkResponse.ok) {
-      throw new Error(`Erro Airtable check: ${checkResponse.status}`);
+      throw new Error(`Airtable check falhou: ${checkResponse.status}`);
     }
 
     const checkData = await checkResponse.json();
 
     if (checkData.records.length > 0) {
-      // Usuário existe → atualiza último login
+      // Usuário já existe → atualiza último login
       const userId = checkData.records[0].id;
+
       const patchResponse = await fetch(
         `https://api.airtable.com/v0/${process.env.BASE_ID}/${process.env.TABLE_NAME}/${userId}`,
         {
@@ -67,7 +84,7 @@ app.post("/login", async (req, res) => {
       );
 
       if (!patchResponse.ok) {
-        throw new Error(`Erro ao atualizar login: ${patchResponse.status}`);
+        throw new Error(`Falha ao atualizar login: ${patchResponse.status}`);
       }
 
       return res.json({ success: true, message: "Login realizado com sucesso!" });
@@ -93,22 +110,26 @@ app.post("/login", async (req, res) => {
       );
 
       if (!createResponse.ok) {
-        throw new Error(`Erro ao criar usuário: ${createResponse.status}`);
+        throw new Error(`Falha ao criar usuário: ${createResponse.status}`);
       }
 
       return res.json({ success: true, message: "Novo usuário cadastrado com sucesso!" });
     }
   } catch (error) {
     console.error("Erro no login:", error);
-    return res.status(500).json({ success: false, message: "Erro na conexão com Airtable: " + error.message });
+    return res.status(500).json({
+      success: false,
+      message: "Erro na conexão com Airtable: " + error.message,
+    });
   }
 });
 
-// Porta dinâmica para Vercel (obrigatório!)
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Servidor rodando na porta ${port}`);
-});
+// Para dev local apenas
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Servidor local rodando → http://localhost:${PORT}`);
+  });
+}
 
-// Export para Vercel (essencial em serverless)
-export default app;
+export default app;  // Essencial para Vercel
