@@ -1,0 +1,8 @@
+[build]
+  publish = "public"          # pasta estática
+  functions = "netlify/functions"  # pasta das functions
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
