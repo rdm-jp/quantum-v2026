@@ -10,37 +10,12 @@
     "start": "node api/index.js"
   },
   "dependencies": {
-    "cors": "^2.8.5",      
+    "cors": "^2.8.5",
     "express": "^4.18.2",
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "dotenv": "^16.4.5"    
+    "dotenv": "^16.6.1"
   },
   "type": "module"
 }
- 
- 
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
