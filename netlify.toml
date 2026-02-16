@@ -1,6 +1,6 @@
 [build]
-  publish = "public"          # pasta estática
-  functions = "netlify/functions"  # pasta das functions
+  publish = "public"
+  functions = "netlify/functions"
 
 [[redirects]]
   from = "/api/*"
