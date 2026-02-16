@@ -1,10 +1,14 @@
-const fetch = require('node-fetch');
+// netlify/functions/login.js - Versão compatível com Netlify CommonJS + ESM fetch
 
-exports.handler = async (event, context) => {
+async function getFetch() {
+  const { default: fetch } = await import('node-fetch');
+  return fetch;
+}
+
+exports.handler = async (event) => {
   console.log('--- Function login invocada ---');
   console.log('Método:', event.httpMethod);
   console.log('Body raw:', event.body);
-  console.log('Node version:', process.version);
 
   if (event.httpMethod !== "POST") {
     console.log('Método inválido');
@@ -33,6 +37,7 @@ exports.handler = async (event, context) => {
   console.log('TABLE_NAME:', process.env.TABLE_NAME || 'faltando');
 
   const agora = new Date().toISOString();
+  const fetch = await getFetch();
 
   try {
     console.log('Iniciando GET no Airtable para email:', email);
